@@ -3,7 +3,7 @@ package se.b3it.app;
 public class MontyHall {
 
     public static void main(String... args) {
-        int totalSimulations = 32768;
+        int totalSimulations = 1000000;
 
         MontyHallSimulator simulator = new MontyHallSimulator(totalSimulations);
 
