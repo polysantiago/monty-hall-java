@@ -15,6 +15,8 @@ class MontyHallSimulator {
 
     private final int totalSimulations;
 
+    private final RandomGenerator randomGenerator = new SynchronizedRandomGenerator(new JDKRandomGenerator());
+
     @Getter
     private Counter stayWins = new Counter();
 
@@ -25,20 +27,18 @@ class MontyHallSimulator {
         stayWins.reset();
         switchWins.reset();
 
-        RandomGenerator randomGenerator = new SynchronizedRandomGenerator(new JDKRandomGenerator());
-
         System.out.println(String.format("Running %d simulations", totalSimulations));
 
         IntStream.range(0, totalSimulations).parallel().forEach(
             n -> {
                 AtomicReferenceArray<Box> boxes = new AtomicReferenceArray<>(new Box[]{Box.EMPTY, Box.EMPTY, Box.EMPTY});
 
-                boxes.compareAndSet(randomGenerator.nextInt(3), Box.EMPTY, Box.MONEY); // put the money in a random box
-                int choice = randomGenerator.nextInt(3); // pick any box
+                boxes.compareAndSet(chooseRandomBox(), Box.EMPTY, Box.MONEY); // put the money in a random box
+                int choice = chooseRandomBox(); // pick any box
                 int shown; // the shown box
                 do {
-                    shown = randomGenerator.nextInt(3);
-                } while (boxes.get(shown) == Box.MONEY || shown == choice);
+                    shown = chooseRandomBox();
+                } while (boxes.get(shown).isMoney() || shown == choice);
 
                 //if you won by staying, count it
                 stayWins.add(boxes.get(choice).getValue());
@@ -50,12 +50,20 @@ class MontyHallSimulator {
         switchWins.add(totalSimulations - stayWins.total());
     }
 
+    private int chooseRandomBox() {
+        return randomGenerator.nextInt(3);
+    }
+
     @Getter
     @RequiredArgsConstructor
     private enum Box {
         EMPTY(0), MONEY(1);
 
         private final int value;
+
+        private boolean isMoney() {
+            return this == MONEY;
+        }
     }
 
     class Counter {
