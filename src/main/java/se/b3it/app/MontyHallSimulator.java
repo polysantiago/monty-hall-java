@@ -2,20 +2,25 @@ package se.b3it.app;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.math3.random.JDKRandomGenerator;
+import lombok.Setter;
+import lombok.extern.java.Log;
 import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.commons.math3.random.SynchronizedRandomGenerator;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.IntStream;
 
+@Log
+@Component
 @RequiredArgsConstructor
 class MontyHallSimulator {
 
-    private final int totalSimulations;
+    private final RandomGenerator randomGenerator;
 
-    private final RandomGenerator randomGenerator = new SynchronizedRandomGenerator(new JDKRandomGenerator());
+    @Setter(onMethod = @__(@Value("${totalSimulations:10}")))
+    private Integer totalSimulations;
 
     @Getter
     private Counter stayWins = new Counter();
@@ -27,7 +32,7 @@ class MontyHallSimulator {
         stayWins.reset();
         switchWins.reset();
 
-        System.out.println(String.format("Running %d simulations", totalSimulations));
+        log.info(String.format("Running %d simulations", totalSimulations));
 
         IntStream.range(0, totalSimulations).parallel().forEach(
             n -> {
@@ -42,9 +47,6 @@ class MontyHallSimulator {
 
                 //if you won by staying, count it
                 stayWins.add(boxes.get(choice).getValue());
-
-                //the switched (last remaining) box is (3 - choice - shown), because 0+1+2=3
-                //switchWins.add(boxes[3 - choice - shown].getValue());
             }
         );
         switchWins.add(totalSimulations - stayWins.total());
@@ -57,7 +59,8 @@ class MontyHallSimulator {
     @Getter
     @RequiredArgsConstructor
     private enum Box {
-        EMPTY(0), MONEY(1);
+        EMPTY(0),
+        MONEY(1);
 
         private final int value;
 
