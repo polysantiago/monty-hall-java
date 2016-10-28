@@ -47,9 +47,11 @@ class MontyHallSimulator {
 
                 //if you won by staying, count it
                 stayWins.add(boxes.get(choice).getValue());
+
+                // Otherwise, choose the last remaining box
+                switchWins.add(boxes.get(3 - choice - shown).getValue());
             }
         );
-        switchWins.add(totalSimulations - stayWins.total());
     }
 
     private int chooseRandomBox() {
